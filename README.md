@@ -1,8 +1,6 @@
 # protocol2-samples-on-kovan
 
-## get token balances
-
-## new orders
+## create orders
 
 ## encode params:
 
