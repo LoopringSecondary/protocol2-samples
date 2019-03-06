@@ -1,7 +1,7 @@
 const Web3 = require("web3"); // tslint:disable-line
 const util = require("util");
 const Tx = require('ethereumjs-tx');
-// const pjs = require("protocol2-js");
+const pjs = require("protocol2-js");
 
 // abi of contract github.com/Loopring/protocol2/contracts/test/DummyToken.sol
 // all ABI files used here can be found in github.com/Loopring/protocol2/ABI directory.
@@ -139,33 +139,33 @@ async function doAuthorize() {
 
 async function test() {
   // do authorize first. only need to do it once.
-  await doAuthorize();
+  // await doAuthorize();
 
-  // /* send some eth to order1Owner and order1Owner,
-  //  * so they can approve token to loopring tradeDelegate:
-  //  * 0.01 ETH should be enough
-  //  */
+  /* send some eth to order1Owner and order1Owner,
+   * so they can approve token to loopring tradeDelegate:
+   * 0.01 ETH should be enough
+   */
   // await sendTransaction(miner, order1Owner, 0.01 * 1e18, "0x0");
   // await sendTransaction(miner, order2Owner, 0.01 * 1e18, "0x0");
 
-  // /*
-  //  * we deployed some fake tokens on kovan testnet,
-  //  * Any address can get these tokens by request the token contract's setBalance method:
-  //  */
+  /*
+   * we deployed some fake tokens on kovan testnet,
+   * Any address can get these tokens by request the token contract's setBalance method:
+   */
 
-  // const LrcToken = new web3.eth.Contract(JSON.parse(dummyTokenABI), LrcAddress);
-  // const WETHToken = new web3.eth.Contract(JSON.parse(dummyTokenABI), WETHAddress);
+  const LrcToken = new web3.eth.Contract(JSON.parse(dummyTokenABI), LrcAddress);
+  const WETHToken = new web3.eth.Contract(JSON.parse(dummyTokenABI), WETHAddress);
 
-  // // set LRC balance for order1Owner
-  // const setBalanceTxData1 = LrcToken.methods.setBalance(order1Owner, web3.utils.toBN(10000 * 1e18), {from: order1Owner}).encodeABI();
-  // await sendTransaction(order1Owner, LrcAddress, 0, setBalanceTxData1);
+  // set LRC balance for order1Owner
+  const setBalanceTxData1 = LrcToken.methods.setBalance(order1Owner, web3.utils.toBN(10000 * 1e18), {from: order1Owner}).encodeABI();
+  await sendTransaction(order1Owner, LrcAddress, 0, setBalanceTxData1);
 
-  // // set WETH balance for order2Owner
-  // const setBalanceTxData2 = LrcToken.methods.setBalance(order2Owner, web3.utils.toBN(10 * 1e18), {from: order2Owner}).encodeABI();
-  // await sendTransaction(order2Owner, WETHAddress, 0, setBalanceTxData2);
-  // // set LRC balance for order2Owner, so it can pay fee using lrc token.
-  // const setBalanceTxData3 = LrcToken.methods.setBalance(order2Owner, web3.utils.toBN(100 * 1e18), {from: order2Owner}).encodeABI();
-  // await sendTransaction(order2Owner, LrcAddress, 0, setBalanceTxData3);
+  // set WETH balance for order2Owner
+  const setBalanceTxData2 = LrcToken.methods.setBalance(order2Owner, web3.utils.toBN(10 * 1e18), {from: order2Owner}).encodeABI();
+  await sendTransaction(order2Owner, WETHAddress, 0, setBalanceTxData2);
+  // set LRC balance for order2Owner, so it can pay fee using lrc token.
+  const setBalanceTxData3 = LrcToken.methods.setBalance(order2Owner, web3.utils.toBN(100 * 1e18), {from: order2Owner}).encodeABI();
+  await sendTransaction(order2Owner, LrcAddress, 0, setBalanceTxData3);
 
   // // do approval to loopring trade delegate:
   // const approveTxData1 = LrcToken.methods.approve(tradeDelegateAddress, 10000 * 1e18, {from: order1Owner}).encodeABI();
