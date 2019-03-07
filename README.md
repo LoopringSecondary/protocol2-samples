@@ -61,19 +61,19 @@
    
 ~~~
 
-## encode params:
+### encode params:
 ~~~
   const bs = ringsGenerator.toSubmitableParam(ringsInfo);
 ~~~
 
-## submit rings:
+### submit rings:
 ~~~
   const submitter = new web3.eth.Contract(JSON.parse(submitterABI), ringSubmitterAddress);
   const txData = submitter.methods.simulateAndReport(web3.utils.hexToBytes(bs), {from: ringsInfo.transactionOrigin}).encodeABI();  
   await sendTransaction(miner, ringSubmitterAddress, 0, txData);
 ~~~
 
-## parse event
+### parse event
 ~~~
   watchAndPrintEvent(submitter, "RingMined");
 ~~~
