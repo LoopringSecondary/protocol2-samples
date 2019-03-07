@@ -1,36 +1,36 @@
 # protocol2-samples
 
-## install and run:
-* npm install
-* node src/test.js
+## Install and run:
+* `npm install`
+* `node src/test.js`
 
-## dependencies:
+## Dependencies:
 * web3
 * protocol2-js@0.4.7
 
-## related resource:
+## Loopring protocol:
 * https://github.com/Loopring/protocol2
 
-## explaination:
-### prepare:
-* first, we need to deploy loopring protocol2 contracts to an ethereum testnet or private net.
-  if you use kovan, we had already done the deployment for you, please refer to: 
-  https://github.com/Loopring/protocol2/blob/master/deployment-kovan.md for detailed information.
+## Setup:
+* Deploy loopring protocol2 to an ethereum testnet or private net. The protocol was already deployed to Kovan:
+  https://github.com/Loopring/protocol2/blob/master/deployment-kovan.md
   
-* In period of development, I suggest you use ganache instead of kovan, so you can test your code much
-  more faster. Follow the steps below:
-  * git clone https://github.com/Loopring/protocol2
-  * cd protocol2
-  * npm install
-  * npm run ganache
-  * open another terminal window, and run: npm run migrate  // this conmmand will deploy all the loopring protocol contract in the ganache node.
-  * you will get a file named deployedAddresses.json under the protocol2 folder.
-  * copy the deployedAddresses.json file to your project. you will need to use it later.
+* While developing, use a local testnet using ganache:
+  * `git clone https://github.com/Loopring/protocol2`
+  * `cd protocol2`
+  * `npm install`
+  * `npm run ganache`
+  * Open another terminal window, and run: `npm run migrate`. This will deploy the loopring protocol in the ganache node and will create a file called `deployedAddresses.json`.
+  * Copy `deployedAddresses.json` to your project, you will need to use it later.
 
-### all sample code below is in src/test.js.
+## Code snippits
 
-### create orders and rings:
-* see https://github.com/Loopring/protocol2-js/blob/master/src/types.ts for orderInfo and ringsInfo type definitions.
+All sample code below is in `src/test.js`.
+
+### Create orders and rings:
+
+For all type definitions (orders, rings,...) see https://github.com/Loopring/protocol2-js/blob/master/src/types.ts
+
 ~~~
    const order1 = {
      tokenS: "WETH",
@@ -61,28 +61,29 @@
    
 ~~~
 
-### encode params:
+### Encode ring data:
 ~~~
   const bs = ringsGenerator.toSubmitableParam(ringsInfo);
 ~~~
 
-### submit rings:
+### Submit rings:
 ~~~
   const submitter = new web3.eth.Contract(JSON.parse(submitterABI), ringSubmitterAddress);
   const txData = submitter.methods.simulateAndReport(web3.utils.hexToBytes(bs), {from: ringsInfo.transactionOrigin}).encodeABI();  
   await sendTransaction(miner, ringSubmitterAddress, 0, txData);
 ~~~
 
-### parse event
+### Parse events
 ~~~
   watchAndPrintEvent(submitter, "RingMined");
 ~~~
 
-## others
-### if you want to know more about how loopring protocol2 works, you may run unit test in [loopring protocol2](https://github.com/Loopring/protocol2) project:
-* clone protocol2 
-* npm install
-* npm run ganache
-* npm run compile
-* npm run transpile
-* npm run test -- transpiled/test/testSubmitRingsSimple.js -x  // run single test.
+## About Loopring protocol
+
+If you want to know more about how loopring protocol2 works, run the unit tests in [loopring protocol2](https://github.com/Loopring/protocol2) project:
+* `clone protocol2`
+* `npm install`
+* `npm run ganache`
+* `npm run compile`
+* `npm run transpile`
+* `npm run test -- transpiled/test/testSubmitRingsSimple.js -x  // run single test.`
