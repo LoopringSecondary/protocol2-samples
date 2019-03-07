@@ -24,7 +24,7 @@ const minerPrivateKey = "7c71142c72a019568cf848ac7b805d21f2e0fd8bc341e8314580de1
 // change the api-key if you want to use yours
 const infuraKov = "https://kovan.infura.io/v3/a06ed9c6b5424b61beafff27ecc3abf3";
 const localUrl = "http://127.0.0.1:8545";
-const web3 = new Web3(new Web3.providers.HttpProvider(localUrl));
+global.web3 = new Web3(new Web3.providers.HttpProvider(localUrl));
 
 /* NOTICE: All the loopring contract addresses and tokens
  * used in this file can be found in this file:
@@ -72,8 +72,6 @@ const orderCancellerAddress = contractAddresses["OrderCanceller"];
 
 async function sendTransaction(from, to, value, data, privKey) {
   const txCount = await web3.eth.getTransactionCount(from);
-  console.log("from:", from, "txCount:", txCount);
-
   const txData = {
     nonce: web3.utils.toHex(txCount),
     gasLimit: web3.utils.toHex(1000000),
@@ -88,7 +86,7 @@ async function sendTransaction(from, to, value, data, privKey) {
     if (err) {
       console.log(err);
     } else {
-      console.log(result);
+      // console.log(result);
     }
   });
 }
@@ -96,7 +94,6 @@ async function sendTransaction(from, to, value, data, privKey) {
 function sendSigned(txData, privKey, cb) {
   const privateKey = new Buffer(privKey, 'hex');
   const transaction = new Tx(txData);
-  console.log("privKey:", privKey);
   transaction.sign(privateKey);
   const serializedTx = transaction.serialize().toString('hex');
   return web3.eth.sendSignedTransaction('0x' + serializedTx, cb);
@@ -193,6 +190,9 @@ async function test() {
    * @see https://github.com/Loopring/protocol2-js/blob/master/src/types.ts for orderInfo and ringsInfo type definitions.
    */
   const order1 = {
+    version: 0,
+    owner: order1Owner,
+    signerPrivateKey: order1OwnerPrivateKey,
     tokenS: "WETH",
     tokenB: "LRC",
     amountS: 1e18,
@@ -201,6 +201,9 @@ async function test() {
     feeAmount: 2e18,
   };
   const order2 = {
+    version: 0,
+    owner: order2Owner,
+    signerPrivateKey: order2OwnerPrivateKey,
     tokenS: "LRC",
     tokenB: "WETH",
     amountS: 1000e18,
@@ -220,16 +223,18 @@ async function test() {
   const ringsGenerator = new pjs.RingsGenerator(context);
   await ringsGenerator.setupRingsAsync(ringsInfo); // sign orders, and ringsInfo.
 
-  // encode rings
-  const bs = ringsGenerator.toSubmitableParam(ringsInfo);
+  console.log("ringsInfo:", ringsInfo);
 
-  // submit rings:
-  const submitter = new web3.eth.Contract(JSON.parse(submitterABI), ringSubmitterAddress);
-  const txData = submitter.methods.simulateAndReport(web3.utils.hexToBytes(bs), {from: ringsInfo.transactionOrigin}).encodeABI();
-  await sendTransaction(miner, ringSubmitterAddress, 0, txData);
+  // // encode rings
+  // const bs = ringsGenerator.toSubmitableParam(ringsInfo);
 
-  // parse event:
-  watchAndPrintEvent(submitter, "RingMined");
+  // // submit rings:
+  // const submitter = new web3.eth.Contract(JSON.parse(submitterABI), ringSubmitterAddress);
+  // const txData = submitter.methods.simulateAndReport(web3.utils.hexToBytes(bs), {from: ringsInfo.transactionOrigin}).encodeABI();
+  // await sendTransaction(miner, ringSubmitterAddress, 0, txData);
+
+  // // parse event:
+  // watchAndPrintEvent(submitter, "RingMined");
 
 }
 
