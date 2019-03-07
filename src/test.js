@@ -2,6 +2,8 @@ const Web3 = require("web3"); // tslint:disable-line
 const util = require("util");
 const Tx = require('ethereumjs-tx');
 const pjs = require("protocol2-js");
+const BN = require("bn.js");
+const contractAddresses = require("../deployedAddresses.json");
 
 // abi of contract github.com/Loopring/protocol2/contracts/test/DummyToken.sol
 // all ABI files used here can be found in github.com/Loopring/protocol2/ABI directory.
@@ -53,31 +55,25 @@ const web3 = new Web3(new Web3.providers.HttpProvider(localUrl));
 /*  --- contracts on kovan network end --- */
 
 /*  --- contracts on ganache, will change every time you redeploy --- */
-const WETHAddress = "0x7Cb592d18d0c49751bA5fce76C1aEc5bDD8941Fc";
-const LrcAddress = "0x97241525fe425C90eBe5A41127816dcFA5954b06";
-const GTOAddress = "0x2D7233F72AF7a600a8EbdfA85558C047c1C8F795";
-const RDNAddress = "0xE708Cb725D6F2aDeEab2258262Aa9129D2A28312";
-const REPAddress = "0x5Dd70df24364DC05D46C8F40611BFDd107927263";
+const WETHAddress = contractAddresses["WETHToken"];
+const LrcAddress = contractAddresses["LRCToken"];
+const GTOAddress = contractAddresses["GTOToken"];
 
-const brokerRegistryAddress = "0xD0ef9379c783E5783BA499ceBA78734794B67E72";
-const orderRegistryAddress = "0x4FF214811F164dAB1889c83b1fe2c8c27d3dB615";
-const orderBookAddress = "0x7f9D7c8d69c13215fE9D460342996BE35CA6F9aA";
-const tradeDelegateAddress = "0xCa66Ffaf17e4B600563f6af032456AA7B05a6975";
-const feeHolderAddress = "0xc577C2Bea8446E2ef43B316d1c897865483Af021";
-const tradeHistoryAddress = "0xc87d291C40C9F2754be26391878f715277c134B8";
-const burnRateTableAddress = "0xe0615A104438c7D17B5E63A1282dC3B785F1C555";
-const ringSubmitterAddress = "0x85019e122bAF97B9451b9031192e5095c666c7df";
-const orderCancellerAddress = "0x0A2edCBbfCE6143E53054898B0a9c3C9087beA98";
+const brokerRegistryAddress = contractAddresses["BrokerRegistry"];
+const orderRegistryAddress = contractAddresses["OrderRegistry"];
+const orderBookAddress = contractAddresses["OrderBook"];
+const tradeDelegateAddress = contractAddresses["Delegate"];
+const feeHolderAddress = contractAddresses["FeeHolder"];
+const tradeHistoryAddress = contractAddresses["TradeHistory"];
+const burnRateTableAddress = contractAddresses["BurnRateTable"];
+const ringSubmitterAddress = contractAddresses["RingSubmitter"];
+const orderCancellerAddress = contractAddresses["OrderCanceller"];
 /*  --- contracts on ganache end --- */
 
-const order1Owner = "0x8ea825a5fd77fd4180da0bb0c14309925c991b58";
-const order1OwnerPrivateKey = "0xb6363ec295018ed93759777139049dbb098734843c311ebb9951c1e93feffcb4";
-
-const order2Owner = "0x201bba420af6cebdaa29b7aff1244447bab35074";
-const order2OwnerPrivateKey = "0x3c3cb9b2fcab41e588d5aa0066928f855f2cf09e5c817fc41350eae9cfe8dc36";
-
-async function sendTransaction(from, to, value, data) {
+async function sendTransaction(from, to, value, data, privKey) {
   const txCount = await web3.eth.getTransactionCount(from);
+  console.log("from:", from, "txCount:", txCount);
+
   const txData = {
     nonce: web3.utils.toHex(txCount),
     gasLimit: web3.utils.toHex(1000000),
@@ -88,7 +84,7 @@ async function sendTransaction(from, to, value, data) {
     data: data,
   };
 
-  sendSigned(txData, function(err, result) {
+  sendSigned(txData, privKey, function(err, result) {
     if (err) {
       console.log(err);
     } else {
@@ -97,9 +93,10 @@ async function sendTransaction(from, to, value, data) {
   });
 }
 
-function sendSigned(txData, cb) {
-  const privateKey = new Buffer(minerPrivateKey, 'hex');
+function sendSigned(txData, privKey, cb) {
+  const privateKey = new Buffer(privKey, 'hex');
   const transaction = new Tx(txData);
+  console.log("privKey:", privKey);
   transaction.sign(privateKey);
   const serializedTx = transaction.serialize().toString('hex');
   return web3.eth.sendSignedTransaction('0x' + serializedTx, cb);
@@ -128,16 +125,30 @@ async function doAuthorize() {
   const TradeDelegate = new web3.eth.Contract(JSON.parse(tradeDelegateABI), tradeDelegateAddress);
   // authorization can only be done by contract owner, which is miner in our case:
   const authTxData1 = TradeDelegate.methods.authorizeAddress(ringSubmitterAddress).encodeABI();
-  await sendTransaction(miner, tradeDelegateAddress, 0, authTxData1);
+  await sendTransaction(miner, tradeDelegateAddress, 0, authTxData1, minerPrivateKey);
 
   const TradeHistory = new web3.eth.Contract(JSON.parse(tradeHistoryABI), tradeHistoryAddress);
   const authTxData2 = TradeHistory.methods.authorizeAddress(ringSubmitterAddress).encodeABI();
-  await sendTransaction(miner, tradeHistoryAddress, 0, authTxData2);
+  await sendTransaction(miner, tradeHistoryAddress, 0, authTxData2, minerPrivateKey);
   const authTxData3 = TradeHistory.methods.authorizeAddress(orderCancellerAddress).encodeABI();
-  await sendTransaction(miner, tradeHistoryAddress, 0, authTxData3);
+  await sendTransaction(miner, tradeHistoryAddress, 0, authTxData3, minerPrivateKey);
+}
+
+function numberToHex(n) {
+  return "0x" + n.toString(16);
 }
 
 async function test() {
+  // you may create new account using webjs:
+  // const order1Owner = web3.eth.accounts.create();
+  // const order1OwnerPrivateKey = order1Owner.privateKey.substr(2);
+  // here, we use account from ganache's account list.
+  const order1Owner = "0x8ea825a5fd77fd4180da0bb0c14309925c991b58";
+  const order1OwnerPrivateKey = "b6363ec295018ed93759777139049dbb098734843c311ebb9951c1e93feffcb4";
+
+  const order2Owner = "0x201bba420af6cebdaa29b7aff1244447bab35074";
+  const order2OwnerPrivateKey = "3c3cb9b2fcab41e588d5aa0066928f855f2cf09e5c817fc41350eae9cfe8dc36";
+
   // do authorize first. only need to do it once.
   // await doAuthorize();
 
@@ -145,8 +156,8 @@ async function test() {
    * so they can approve token to loopring tradeDelegate:
    * 0.01 ETH should be enough
    */
-  // await sendTransaction(miner, order1Owner, 0.01 * 1e18, "0x0");
-  // await sendTransaction(miner, order2Owner, 0.01 * 1e18, "0x0");
+  // await sendTransaction(miner, order1Owner, 0.01 * 1e18, "0x0", minerPrivateKey);
+  // await sendTransaction(miner, order2Owner, 0.01 * 1e18, "0x0", minerPrivateKey);
 
   /*
    * we deployed some fake tokens on kovan testnet,
@@ -157,68 +168,68 @@ async function test() {
   const WETHToken = new web3.eth.Contract(JSON.parse(dummyTokenABI), WETHAddress);
 
   // set LRC balance for order1Owner
-  const setBalanceTxData1 = LrcToken.methods.setBalance(order1Owner, web3.utils.toBN(10000 * 1e18), {from: order1Owner}).encodeABI();
-  await sendTransaction(order1Owner, LrcAddress, 0, setBalanceTxData1);
+  const setBalanceTxData1 = LrcToken.methods.setBalance(order1Owner, numberToHex(1e22)).encodeABI();
+  await sendTransaction(order1Owner, LrcAddress, 0, setBalanceTxData1, order1OwnerPrivateKey);
 
   // set WETH balance for order2Owner
-  const setBalanceTxData2 = LrcToken.methods.setBalance(order2Owner, web3.utils.toBN(10 * 1e18), {from: order2Owner}).encodeABI();
-  await sendTransaction(order2Owner, WETHAddress, 0, setBalanceTxData2);
+  const setBalanceTxData2 = WETHToken.methods.setBalance(order2Owner, numberToHex(10 * 1e18)).encodeABI();
+  await sendTransaction(order2Owner, WETHAddress, 0, setBalanceTxData2, order2OwnerPrivateKey);
   // set LRC balance for order2Owner, so it can pay fee using lrc token.
-  const setBalanceTxData3 = LrcToken.methods.setBalance(order2Owner, web3.utils.toBN(100 * 1e18), {from: order2Owner}).encodeABI();
-  await sendTransaction(order2Owner, LrcAddress, 0, setBalanceTxData3);
+  const setBalanceTxData3 = LrcToken.methods.setBalance(order2Owner, numberToHex(100 * 1e18)).encodeABI();
+  await sendTransaction(order2Owner, LrcAddress, 0, setBalanceTxData3, order2OwnerPrivateKey);
 
-  // // do approval to loopring trade delegate:
-  // const approveTxData1 = LrcToken.methods.approve(tradeDelegateAddress, 10000 * 1e18, {from: order1Owner}).encodeABI();
-  // await sendTransaction(order1Owner, LrcAddress, 0, approveTxData1);
+  // do approval to loopring trade delegate:
+  const approveTxData1 = LrcToken.methods.approve(tradeDelegateAddress, numberToHex(1e+22)).encodeABI();
+  await sendTransaction(order1Owner, LrcAddress, 0, approveTxData1, order1OwnerPrivateKey);
 
-  // const approveTxData2 = LrcToken.methods.approve(tradeDelegateAddress, 100 * 1e18, {from: order2Owner}).encodeABI();
-  // await sendTransaction(order2Owner, LrcAddress, 0, approveTxData2);
-  // const approveTxData3 = WETHToken.methods.approve(tradeDelegateAddress, 10 * 1e18, {from: order2Owner}).encodeABI();
-  // await sendTransaction(order1Owner, LrcAddress, 0, approveTxData3);
+  const approveTxData2 = LrcToken.methods.approve(tradeDelegateAddress, numberToHex(100 * 1e18)).encodeABI();
+  await sendTransaction(order2Owner, LrcAddress, 0, approveTxData2, order2OwnerPrivateKey);
+  const approveTxData3 = WETHToken.methods.approve(tradeDelegateAddress, numberToHex(10 * 1e18)).encodeABI();
+  await sendTransaction(order2Owner, WETHAddress, 0, approveTxData3, order2OwnerPrivateKey);
 
-  // /* create orders:
-  //  * order1: buy 1000 LRC, sell 1 WETH
-  //  * order2: buy 1 WETH, sell 1000 LRC
-  //  * @see https://github.com/Loopring/protocol2-js/blob/master/src/types.ts for orderInfo and ringsInfo type definitions.
-  //  */
-  // const order1 = {
-  //   tokenS: "WETH",
-  //   tokenB: "LRC",
-  //   amountS: 1e18,
-  //   amountB: 1000e18,
-  //   feeToken: LrcAddress,
-  //   feeAmount: 2e18,
-  // };
-  // const order2 = {
-  //   tokenS: "LRC",
-  //   tokenB: "WETH",
-  //   amountS: 1000e18,
-  //   amountB: 1e18,
-  //   feeToken: LrcAddress,
-  //   feeAmount: 3e18,
-  // };
+  /* create orders:
+   * order1: buy 1000 LRC, sell 1 WETH
+   * order2: buy 1 WETH, sell 1000 LRC
+   * @see https://github.com/Loopring/protocol2-js/blob/master/src/types.ts for orderInfo and ringsInfo type definitions.
+   */
+  const order1 = {
+    tokenS: "WETH",
+    tokenB: "LRC",
+    amountS: 1e18,
+    amountB: 1000e18,
+    feeToken: LrcAddress,
+    feeAmount: 2e18,
+  };
+  const order2 = {
+    tokenS: "LRC",
+    tokenB: "WETH",
+    amountS: 1000e18,
+    amountB: 1e18,
+    feeToken: LrcAddress,
+    feeAmount: 3e18,
+  };
 
-  // // generate rings and sign:
-  // const context = new pjs.Context(0, 0, tradeDelegateAddress, tradeHistoryAddress, brokerRegistryAddress, orderRegistryAddress, feeHolderAddress, orderBookAddress, burnRateTableAddress, LrcAddress, 1000, 0);
-  // const ringsInfo = {
-  //   transactionOrigin: miner,
-  //   miner: miner,
-  //   rings: [[0, 1]],
-  //   orders: [order1, order2],
-  // };
-  // const ringsGenerator = new pjs.RingsGenerator(this.context);
-  // await ringsGenerator.setupRingsAsync(ringsInfo); // sign orders, and ringsInfo.
+  // generate rings and sign:
+  const context = new pjs.Context(0, 0, tradeDelegateAddress, tradeHistoryAddress, brokerRegistryAddress, orderRegistryAddress, feeHolderAddress, orderBookAddress, burnRateTableAddress, LrcAddress, 1000, 0);
+  const ringsInfo = {
+    transactionOrigin: miner,
+    miner: miner,
+    rings: [[0, 1]],
+    orders: [order1, order2],
+  };
+  const ringsGenerator = new pjs.RingsGenerator(context);
+  await ringsGenerator.setupRingsAsync(ringsInfo); // sign orders, and ringsInfo.
 
-  // // encode rings
-  // const bs = ringsGenerator.toSubmitableParam(ringsInfo);
+  // encode rings
+  const bs = ringsGenerator.toSubmitableParam(ringsInfo);
 
-  // // submit rings:
-  // const submitter = new web3.eth.Contract(JSON.parse(submitterABI), ringSubmitterAddress);
-  // const txData = submitter.methods.simulateAndReport(web3.utils.hexToBytes(bs), {from: ringsInfo.transactionOrigin}).encodeABI();
-  // await sendTransaction(miner, ringSubmitterAddress, 0, txData);
+  // submit rings:
+  const submitter = new web3.eth.Contract(JSON.parse(submitterABI), ringSubmitterAddress);
+  const txData = submitter.methods.simulateAndReport(web3.utils.hexToBytes(bs), {from: ringsInfo.transactionOrigin}).encodeABI();
+  await sendTransaction(miner, ringSubmitterAddress, 0, txData);
 
-  // // parse event:
-  // watchAndPrintEvent(submitter, "RingMined");
+  // parse event:
+  watchAndPrintEvent(submitter, "RingMined");
 
 }
 
