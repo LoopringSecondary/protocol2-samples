@@ -1,6 +1,18 @@
 # protocol2-samples
 
-## prepare:
+## install and run:
+* npm install
+* node src.test.js
+
+## dependencies:
+* web3
+* protocol2-js@0.4.7
+
+## related resource:
+* https://github.com/Loopring/protocol2
+
+## explaination:
+### prepare:
 * first, we need to deploy loopring protocol2 contracts to an ethereum testnet or private net.
   if you use kovan, we had already done the deployment for you, please refer to: 
   https://github.com/Loopring/protocol2/blob/master/deployment-kovan.md for detailed information.
@@ -15,9 +27,9 @@
   * you will get a file named deployedAddresses.json under the protocol2 folder.
   * copy the deployedAddresses.json file to your project. you will need to use it later.
 
-## all sample code below is in src/test.js.
+### all sample code below is in src/test.js.
 
-## create orders and rings:
+### create orders and rings:
 * see https://github.com/Loopring/protocol2-js/blob/master/src/types.ts for orderInfo and ringsInfo type definitions.
 ~~~
    const order1 = {
