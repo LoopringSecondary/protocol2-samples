@@ -2,7 +2,7 @@
 
 ## install and run:
 * npm install
-* node src.test.js
+* node src/test.js
 
 ## dependencies:
 * web3
@@ -78,3 +78,11 @@
   watchAndPrintEvent(submitter, "RingMined");
 ~~~
 
+## others
+### if you want to know more about how loopring protocol2 works, you may run unit test in [loopring protocol2](https://github.com/Loopring/protocol2) project:
+* clone protocol2 
+* npm install
+* npm run ganache
+* npm run compile
+* npm run transpile
+* npm run test -- transpiled/test/testSubmitRingsSimple.js -x  // run single test.
