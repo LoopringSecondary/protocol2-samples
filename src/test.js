@@ -102,7 +102,7 @@ async function sendTransaction(from, to, value, data, privKey) {
     if (err) {
       console.log(err);
     } else {
-      // console.log(result);
+      console.log(result);
     }
   });
 }
@@ -292,38 +292,13 @@ function createRings() {
 }
 
 async function test() {
-  // do authorize first. only need to do it once.
-  // await doAuthorize();
+  // do authorize first. only need to do it once for each set of protocol addresses.
+  // (if you redeploy contracts, you get a new set of addresses)
+  await doAuthorize();
 
-  /* send some eth to order1Owner and order1Owner,
-   * so they can approve token to loopring tradeDelegate:
-   * 0.01 ETH should be enough
-   */
+  // send eth
   // await sendTransaction(miner, order1Owner, 0.01 * 1e18, "0x0", minerPrivateKey);
   // await sendTransaction(miner, order2Owner, 0.01 * 1e18, "0x0", minerPrivateKey);
-
-
-  // const WETHToken = new web3.eth.Contract(JSON.parse(dummyTokenABI), WETHAddress);
-
-  // // set LRC balance for order1Owner
-  // const setBalanceTxData1 = LrcToken.methods.setBalance
-  // await sendTransaction(order1Owner, LrcAddress, 0, setBalanceTxData1, order1OwnerPrivateKey);
-
-  // // set WETH balance for order2Owner
-  // const setBalanceTxData2 = WETHToken.methods.setBalance(order2Owner, numberToHex(10 * 1e18)).encodeABI();
-  // await sendTransaction(order2Owner, WETHAddress, 0, setBalanceTxData2, order2OwnerPrivateKey);
-  // // set LRC balance for order2Owner, so it can pay fee using lrc token.
-  // const setBalanceTxData3 = LrcToken.methods.setBalance(order2Owner, numberToHex(100 * 1e18)).encodeABI();
-  // await sendTransaction(order2Owner, LrcAddress, 0, setBalanceTxData3, order2OwnerPrivateKey);
-
-  // // do approval to loopring trade delegate:
-  // const approveTxData1 = LrcToken.methods.approve(tradeDelegateAddress, numberToHex(1e+22)).encodeABI();
-  // await sendTransaction(order1Owner, LrcAddress, 0, approveTxData1, order1OwnerPrivateKey);
-
-  // const approveTxData2 = LrcToken.methods.approve(tradeDelegateAddress, numberToHex(100 * 1e18)).encodeABI();
-  // await sendTransaction(order2Owner, LrcAddress, 0, approveTxData2, order2OwnerPrivateKey);
-  // const approveTxData3 = WETHToken.methods.approve(tradeDelegateAddress, numberToHex(10 * 1e18)).encodeABI();
-  // await sendTransaction(order2Owner, WETHAddress, 0, approveTxData3, order2OwnerPrivateKey);
 
   const ringsInfo = createRings();
 
