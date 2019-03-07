@@ -5,14 +5,15 @@
   if you use kovan, we had already done the deployment for you, please refer to: 
   https://github.com/Loopring/protocol2/blob/master/deployment-kovan.md for detailed information.
   
-* During development period, I suggest you use ganache instead of kovan, so you can test your code much
+* In period of development, I suggest you use ganache instead of kovan, so you can test your code much
   more faster. Follow the steps below:
   * git clone https://github.com/Loopring/protocol2
   * cd protocol2
   * npm install
   * npm run ganache
-  * open another terminal window, and run: npm run migrate
-  * you will get a file named deployedAddresses.json
+  * open another terminal window, and run: npm run migrate  // this conmmand will deploy all the loopring protocol contract in the ganache node.
+  * you will get a file named deployedAddresses.json under the protocol2 folder.
+  * copy the deployedAddresses.json file to your project. you will need to use it later.
 
 ## all sample code below is in src/test.js.
 
