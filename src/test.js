@@ -129,7 +129,7 @@ async function watchAndPrintEvent(contract, eventName) {
   const events = await getEventsFromContract(contract, eventName, blockNumber);
 
   events.forEach((e) => {
-    console.log("event:");
+    console.log(eventName + " event:");
     console.log(e);
   });
 }
@@ -247,11 +247,11 @@ async function setOrderBalancesAndApprove(order) {
 function createRings() {
   // you can create new account using webjs:
   // const order1Owner = web3.eth.accounts.create();
-  const order1Owner = "0xe20cf871f1646d8651ee9dc95aab1d93160b3467";
-  const order1OwnerPrivateKey = "7c71142c72a019568cf848ac7b805d21f2e0fd8bc341e8314580de11c6a397bf";
+  const order1Owner = "0xc0ff3f78529ab90f765406f7234ce0f2b1ed69ee";
+  const order1OwnerPrivateKey = "4c5496d2745fe9cc2e0aa3e1aad2b66cc792a716decf707ddb3f92bd2d93ad24";
 
-  const order2Owner = "0xc0ff3f78529ab90f765406f7234ce0f2b1ed69ee";
-  const order2OwnerPrivateKey = "4c5496d2745fe9cc2e0aa3e1aad2b66cc792a716decf707ddb3f92bd2d93ad24";
+  const order2Owner = "0x611db73454c27e07281d2317aa088f9918321415";
+  const order2OwnerPrivateKey = "04b9e9d7c1385c581bab12600834f4f90c6e19142faae6c2de670bfb4b5a08c4";
 
   let validSince = (new Date()).getTime() / 1000; // system time seconds
   validSince = Math.floor(validSince);
