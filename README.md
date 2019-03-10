@@ -14,7 +14,7 @@
 ## Setup:
 * Deploy loopring protocol2 to an ethereum testnet or private net. The protocol was already deployed to Kovan:
   https://github.com/Loopring/protocol2/blob/master/deployment-kovan.md
-  
+
 * While developing, use a local testnet using ganache:
   * `git clone https://github.com/Loopring/protocol2`
   * `cd protocol2`
@@ -30,6 +30,7 @@ All sample code below is in `src/test.js`.
 ### Create orders and rings:
 
 For all type definitions (orders, rings,...) see https://github.com/Loopring/protocol2-js/blob/master/src/types.ts
+For now we only support signing with EIP-712. Make sure to submit rings from the same address as the miner.
 
 ~~~
    const order1 = {
@@ -39,8 +40,9 @@ For all type definitions (orders, rings,...) see https://github.com/Loopring/pro
      amountB: 1000e18,
      feeToken: LrcAddress,
      feeAmount: 2e18,
+     signAlgorithm: pjs.SignAlgorithm.EIP712,
    };
-   
+
   const order2 = {
     tokenS: "LRC",
     tokenB: "WETH",
@@ -48,6 +50,7 @@ For all type definitions (orders, rings,...) see https://github.com/Loopring/pro
     amountB: 1e18,
     feeToken: LrcAddress,
     feeAmount: 3e18,
+    signAlgorithm: pjs.SignAlgorithm.EIP712,
   };
 
   const ringsInfo = {
@@ -58,7 +61,7 @@ For all type definitions (orders, rings,...) see https://github.com/Loopring/pro
   };
   const ringsGenerator = new pjs.RingsGenerator(context);
   await ringsGenerator.setupRingsAsync(ringsInfo); // sign orders, and ringsInfo.
-   
+
 ~~~
 
 ### Encode ring data:
@@ -69,7 +72,7 @@ For all type definitions (orders, rings,...) see https://github.com/Loopring/pro
 ### Submit rings:
 ~~~
   const submitter = new web3.eth.Contract(JSON.parse(submitterABI), ringSubmitterAddress);
-  const txData = submitter.methods.simulateAndReport(web3.utils.hexToBytes(bs), {from: ringsInfo.transactionOrigin}).encodeABI();  
+  const txData = submitter.methods.simulateAndReport(web3.utils.hexToBytes(bs), {from: ringsInfo.transactionOrigin}).encodeABI();
   await sendTransaction(miner, ringSubmitterAddress, 0, txData);
 ~~~
 
